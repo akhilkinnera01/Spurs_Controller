@@ -77,7 +77,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 
-3. Installation
+##3. Installation
 
 Ensure requirements.txt exists in the project root directory.
 
@@ -102,7 +102,7 @@ System-level input simulation.
 NumPy
 High-performance vector arithmetic and Euclidean distance calculations.
 
-4. Execution & Calibration Protocol
+##4. Execution & Calibration Protocol
 Launch
 python main.py
 
@@ -118,7 +118,7 @@ Required for system volume control via osascript.
 
 Without these permissions, gesture detection may work but system actions will fail silently.
 
-5. Real-Time Training (The “Brain”)
+##5. Real-Time Training (The “Brain”)
 
 The system starts in an uncalibrated state. You must train the KNN classifier using your own hand geometry.
 
@@ -145,7 +145,7 @@ gesture_memory.pkl
 
 This allows persistence across restarts.
 
-6. Troubleshooting
+##6. Troubleshooting
 Issue
 AttributeError: module 'mediapipe' has no attribute 'solutions'
 
@@ -177,7 +177,7 @@ It must report 0.10.5
 
 Recreate the virtual environment using the setup script above
 
-Notes
+##Notes
 
 This project assumes direct camera access and low-latency frame processing. Running inside containers, remote desktops, or sandboxed environments is not supported.
 
