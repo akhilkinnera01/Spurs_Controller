@@ -16,6 +16,8 @@ This README explains how it works, why the obvious approach failed, and the spec
 
 ---
 
+![Spurs Controller Demo](Image.jpg)
+
 ## Why the Obvious Approach Failed
 
 My first instinct was pixels.
