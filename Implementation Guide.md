@@ -1,4 +1,5 @@
-# Developer Setup & Implementation Guide  
+# Developer Setup & Implementation Guide
+
 ## Gesture Controller
 
 ---
@@ -7,10 +8,10 @@
 
 This document outlines the technical environment, dependency constraints, and execution protocols required to run the Gesture Controller.
 
-**Target Architecture**  
-macOS (Apple Silicon M1, M2, M3) and Intel Macs  
+**Target Architecture**
+macOS (Apple Silicon M1, M2, M3) and Intel Macs
 
-**Runtime**  
+**Runtime**
 Python 3.8+
 
 ---
@@ -21,26 +22,23 @@ Python 3.8+
 
 This project explicitly pins the following dependency:
 
+```
 mediapipe==0.10.5
-
-kotlin
-Copy code
+```
 
 ### Why this matters
 
 Newer versions of MediaPipe (0.10.9 and above) introduced a breaking change in the macOS ARM64 Python wheels. This breaks the legacy **Solutions API**, specifically:
 
+```
 mp.solutions.hands
-
-csharp
-Copy code
+```
 
 The failure typically manifests as:
 
+```
 AttributeError: module 'mediapipe' has no attribute 'solutions'
-
-yaml
-Copy code
+```
 
 Rolling MediaPipe back to **0.10.5** restores full access to the hand landmark tensor graph required for this application's spatial math and gesture inference.
 
@@ -56,17 +54,7 @@ To prevent **path shadowing** where global Conda or system Python installations 
 
 Execute the following commands from the project root:
 
-
-## 2. Environment Configuration
-
-To prevent **path shadowing** where global Conda or system Python installations interfere with local imports, the project must run inside a strictly isolated virtual environment.
-
-### Setup Script
-
-Execute the following commands from the project root:
-
-Execute the following commands from the project root:
-
+```bash
 # 1. Remove any existing virtual environment
 rm -rf venv
 
@@ -75,115 +63,141 @@ python3 -m venv venv
 
 # 3. Activate the environment
 source venv/bin/activate
+```
 
+You should now see `(venv)` prefixed in your terminal prompt.
 
-##3. Installation
+### Exiting the Virtual Environment
 
-Ensure requirements.txt exists in the project root directory.
+When you are finished working, exit the virtual environment with:
+
+```bash
+deactivate
+```
+
+The `(venv)` prefix will disappear, indicating you have returned to the system Python.
+
+---
+
+## 3. Installation
+
+Ensure `requirements.txt` exists in the project root directory.
 
 Install dependencies using the pinned versions:
 
+```bash
 pip install -r requirements.txt
+```
 
-Core Stack
+### Core Stack
 
-OpenCV (cv2)
+**OpenCV (cv2)**
 Real-time camera capture and vector overlay rendering.
 
-MediaPipe (0.10.5)
+**MediaPipe (0.10.5)**
 21-point hand landmark skeletal tracking.
 
-Scikit-learn
+**Scikit-learn**
 K-Nearest Neighbors (KNN) classifier for gesture inference.
 
-PyAutoGUI
+**PyAutoGUI**
 System-level input simulation.
 
-NumPy
+**NumPy**
 High-performance vector arithmetic and Euclidean distance calculations.
 
-##4. Execution & Calibration Protocol
-Launch
-python main.py
+---
 
-macOS Permissions
+## 4. Execution & Calibration Protocol
+
+### Launch
+
+```bash
+python main.py
+```
+
+### macOS Permissions
 
 When prompted, grant the following permissions to your Terminal or IDE:
 
-Camera
+**Camera**
 Required for live video capture.
 
-Accessibility
-Required for system volume control via osascript.
+**Accessibility**
+Required for system volume control via `osascript`.
 
 Without these permissions, gesture detection may work but system actions will fail silently.
 
-##5. Real-Time Training (The “Brain”)
+---
+
+## 5. Real-Time Training (The “Brain”)
 
 The system starts in an uncalibrated state. You must train the KNN classifier using your own hand geometry.
 
 Each keypress records a feature vector into the model.
 
-Training Steps
+### Training Steps
 
-Neutral State
+**Neutral State**
 Relax your hand.
-Press 1 repeatedly while slightly rotating your wrist.
+Press `1` repeatedly while slightly rotating your wrist.
 
-Volume Up
+**Volume Up**
 Hold your activation gesture such as an open palm.
-Press 2 repeatedly.
+Press `2` repeatedly.
 
-Volume Down
+**Volume Down**
 Hold your deactivation gesture such as a closed fist.
-Press 3 repeatedly.
+Press `3` repeatedly.
 
 The model automatically serializes this training data to:
 
+```
 gesture_memory.pkl
-
+```
 
 This allows persistence across restarts.
 
-##6. Troubleshooting
-Issue
+---
+
+## 6. Troubleshooting
+
+### Issue
+
+```
 AttributeError: module 'mediapipe' has no attribute 'solutions'
+```
 
-Common Causes
+### Common Causes
 
-Running outside the virtual environment
+* Running outside the virtual environment
+* MediaPipe version mismatch
+* A local file named `mediapipe.py` shadowing the package
+* Stale Python cache files
 
-MediaPipe version mismatch
+### Fix Checklist
 
-A local file named mediapipe.py shadowing the package
+1. Ensure no file in the project directory is named `mediapipe.py`
+2. Delete Python cache files:
 
-Stale Python cache files
+   ```bash
+   rm -rf __pycache__
+   ```
+3. Confirm the MediaPipe version:
 
-Fix Checklist
+   ```bash
+   pip show mediapipe
+   ```
 
-Ensure no file in the project directory is named mediapipe.py
+   It must report `0.10.5`
+4. Recreate the virtual environment using the setup script above
 
-Delete Python cache files:
+---
 
-rm -rf __pycache__
-
-
-Confirm the MediaPipe version:
-
-pip show mediapipe
-
-
-It must report 0.10.5
-
-Recreate the virtual environment using the setup script above
-
-##Notes
+## Notes
 
 This project assumes direct camera access and low-latency frame processing. Running inside containers, remote desktops, or sandboxed environments is not supported.
 
 Gesture recognition quality depends heavily on lighting conditions, camera field of view, and user-specific calibration density.
 
 Train generously. Your future self will thank you.
-
-
-This version is GitHub-clean, README-ready, and reviewer-proof.
