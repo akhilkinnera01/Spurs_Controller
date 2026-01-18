@@ -1,84 +1,172 @@
-Project Overview
+# Developer Setup & Implementation Guide  
+## Gesture Controller
+
+---
+
+## Project Overview
 
 This document outlines the technical environment, dependency constraints, and execution protocols required to run the Gesture Controller.
 
-Target Architecture: macOS (Apple Silicon M1/M2/M3) & Intel
+**Target Architecture:**  
+macOS (Apple Silicon M1 / M2 / M3) and Intel Macs  
 
-Runtime: Python 3.8+
+**Runtime:**  
+Python 3.8+
 
-1. Critical Dependency Note (Apple Silicon)
+---
 
-Important : > This project explicitly pins mediapipe==0.10.5.
+## 1. Critical Dependency Note (Apple Silicon)
 
-Why? Newer versions of MediaPipe (0.10.9+) introduced a breaking change to the Python Wheels for macOS ARM64 architectures, causing the legacy "Solutions" API (mp.solutions.hands) to fail with an AttributeError. Rolling back to 0.10.5 restores full access to the hand landmark tensor graph required for this application's spatial math logic.
+**Important**
 
-2. Environment Configuration
+This project explicitly pins:
 
-To prevent "Path Shadowing" (where global Conda installs conflict with local imports), a strictly isolated virtual environment is required.
+mediapipe==0.10.5
 
-Setup Script
+kotlin
+Copy code
 
-Execute the following in your terminal to create a clean workspace:
+### Why this matters
 
-# 1. Nuke any existing environment to ensure a clean slate
+Newer versions of MediaPipe (0.10.9 and above) introduced a breaking change in the macOS ARM64 Python wheels. This breaks the legacy **Solutions API**, specifically:
+
+mp.solutions.hands
+
+csharp
+Copy code
+
+The failure typically manifests as:
+
+AttributeError: module 'mediapipe' has no attribute 'solutions'
+
+yaml
+Copy code
+
+Rolling MediaPipe back to **0.10.5** restores full access to the hand landmark tensor graph that this application relies on for spatial math and gesture inference.
+
+Do not upgrade this dependency unless the core hand tracking pipeline is refactored away from the Solutions API.
+
+---
+
+## 2. Environment Configuration
+
+To prevent **Path Shadowing** (global Conda or system Python interfering with local imports), the project must run inside a strictly isolated virtual environment.
+
+### Setup Script
+
+Execute the following commands from the project root:
+
+```bash
+# 1. Remove any existing virtual environment
 rm -rf venv
 
-# 2. Initialize a fresh Python Virtual Environment
+# 2. Create a fresh virtual environment
 python3 -m venv venv
 
 # 3. Activate the environment
 source venv/bin/activate
-
+You should now see (venv) prefixed in your terminal prompt.
 
 3. Installation
+Ensure requirements.txt exists in the project root.
 
-Ensure the requirements.txt file is present in your root directory.
+Install dependencies using the pinned versions:
 
-# Install dependencies with the specific pinned versions
+bash
+Copy code
 pip install -r requirements.txt
+Core Stack
+OpenCV (cv2)
+Real-time camera capture and vector overlay rendering.
 
+MediaPipe (0.10.5)
+21-point hand landmark skeletal tracking.
 
-Core Stack:
+Scikit-learn
+K-Nearest Neighbors (KNN) classifier for gesture inference.
 
-OpenCV (cv2): Real-time frame capture and vector overlay rendering.
+PyAutoGUI
+System-level input simulation.
 
-MediaPipe (0.10.5): Hand landmark detection (21-point skeletal tracking).
-
-Scikit-Learn: K-Nearest Neighbors (KNN) classifier for gesture inference.
-
-PyAutoGUI: System-level input simulation.
-
-NumPy: High-performance vector arithmetic for Euclidean distance calculations.
+NumPy
+High-performance vector arithmetic and Euclidean distance calculations.
 
 4. Execution & Calibration Protocol
-
 Launch
-
+bash
+Copy code
 python main.py
+macOS Permissions
+When prompted, grant the following permissions to your Terminal or IDE:
 
+Camera
+Required for live video capture.
 
-Note: You must grant "Camera" and "Accessibility" permissions to your Terminal/IDE when prompted to allow video capture and volume control (osascript).
+Accessibility
+Required for system volume control via osascript.
 
-Real-Time Training (The "Brain")
+Without these permissions, gesture detection may work but system actions will fail silently.
 
-The system initializes in an uncalibrated state. You must "teach" the KNN model your specific hand variance.
+5. Real-Time Training (The “Brain”)
+The system starts in an uncalibrated state. You must train the KNN classifier using your own hand geometry.
 
-Neutral State: Relax your hand. Press 1 repeatedly while rotating your wrist slightly.
+Each keypress records a feature vector into the model.
 
-Volume Up: Hold your activation gesture (e.g., Open Palm). Press 2 repeatedly.
+Training Steps
+Neutral State
+Relax your hand.
+Press 1 repeatedly while slightly rotating your wrist.
 
-Volume Down: Hold your deactivation gesture (e.g., Closed Fist). Press 3 repeatedly.
+Volume Up
+Hold your activation gesture (example: open palm).
+Press 2 repeatedly.
 
-The model automatically serializes this training data to gesture_memory.pkl for persistence.
+Volume Down
+Hold your deactivation gesture (example: closed fist).
+Press 3 repeatedly.
 
-5. Troubleshooting
+The model automatically serializes this training data to:
 
-Issue: AttributeError: module 'mediapipe' has no attribute 'solutions'
+Copy code
+gesture_memory.pkl
+This allows persistence across restarts.
 
-Fix: You are likely running in a global environment or have a conflicting file named mediapipe.py.
+6. Troubleshooting
+Issue
+pgsql
+Copy code
+AttributeError: module 'mediapipe' has no attribute 'solutions'
+Causes
+Running outside the virtual environment
 
-Ensure no file in your folder is named mediapipe.py.
+MediaPipe version mismatch
 
-Delete the __pycache__ folder.
+A local file named mediapipe.py shadowing the package
 
-Re-run the Setup Script above to force the `venv
+Stale Python cache files
+
+Fix Checklist
+Ensure no file in the project directory is named mediapipe.py
+
+Delete cache files:
+
+bash
+Copy code
+rm -rf __pycache__
+Confirm MediaPipe version:
+
+bash
+Copy code
+pip show mediapipe
+It must report 0.10.5
+
+Recreate the virtual environment using the setup script above
+
+Notes
+This project assumes direct camera access and low-latency frame processing. Running inside containers, remote desktops, or sandboxed environments is not supported.
+
+Gesture recognition quality depends heavily on lighting, camera FOV, and user-specific calibration density.
+
+Train generously. Your future self will thank you.
+
+Copy code
