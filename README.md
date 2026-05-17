@@ -18,6 +18,19 @@ This README explains how it works, why the obvious approach failed, and the spec
 
 ![Spurs Controller Demo](Image.jpg)
 
+## Running Locally
+
+Create your own virtual environment instead of using one from the repository:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
+
+Generated runtime files such as `.venv/`, `venv/`, `__pycache__/`, and gesture memory files are intentionally ignored by git.
+
 ## Why the Obvious Approach Failed
 
 My first instinct was pixels.
@@ -142,6 +155,8 @@ class GestureBrain:
             self.is_trained = True
             self.save()
 ```
+
+Gesture examples are saved locally as JSON. The project does not ship a trained gesture-memory file, and it avoids loading Python pickle files from the repository.
 
 ---
 

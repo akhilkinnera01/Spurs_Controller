@@ -1,0 +1,6 @@
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+gesture_memory.*
+.DS_Store
